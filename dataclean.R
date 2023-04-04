@@ -1,7 +1,7 @@
 require(readxl)
 require(tidyverse)
 
-inc <- read_xlsx("C:\\Users\\andre\\OneDrive - University of Illinois - Urbana\\Current Classes\\STAT 431\\incareration.xlsx")
+inc <- read_xls("C:\\Users\\tyler\\Documents\\Courses\\23S\\STAT 431\\Project/Dec-2022-Prison-Population-Data-Set.xls")
 #Change appropriate columns to data format
 inc$'Date of Birth' <- as.Date(inc$'Date of Birth', format = "%m/%d/%y")
 inc$'Current Admission Date' <- as.Date(inc$'Current Admission Date', format = "%m/%d/%y")
