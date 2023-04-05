@@ -10,9 +10,9 @@ model = ulam(
   alist(
     time ~ dpois(pre_lambda),
     log(pre_lambda) <- lambda[county],
-    lambda[county] ~ dgamma2(a_bar, b_bar),
+    lambda[county] ~ dnorm(a_bar, b_bar),
     a_bar ~ dgamma2(10, 1),
-    b_bar ~ dgamma2(0.1, 1)
+    b_bar ~ dexp(10)
   ), data = dat, chains = 4, cores = 4
 )
 precis(model, depth = 2)
