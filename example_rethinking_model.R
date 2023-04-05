@@ -10,16 +10,17 @@ model = ulam(
   alist(
     time ~ dpois(pre_lambda),
     log(pre_lambda) <- lambda[county],
-    lambda[county] ~ dnorm(a_bar, b_bar),
-    a_bar ~ dgamma2(10, 1),
+    lambda <- b0[county],
+    b0[county] ~ dnorm(a_bar, b_bar),
+    a_bar ~ dnorm(0, 10),
     b_bar ~ dexp(10)
   ), data = dat, chains = 4, cores = 4
 )
 precis(model, depth = 2)
 
 # check diagnostics (only the first county is looked at here)
-traceplot(model, pars = c("a_bar", "b_bar", "lambda[1]"))
-trankplot(model, pars = c("a_bar", "b_bar", "lambda[1]"))
+traceplot(model, pars = c("a_bar", "b_bar", "b0[1]"))
+trankplot(model, pars = c("a_bar", "b_bar", "b0[1]"))
 
 # sample from posterior
 post = extract.samples(model)
