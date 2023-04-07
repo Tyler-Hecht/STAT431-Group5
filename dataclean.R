@@ -25,7 +25,6 @@ cnts2 = inc1 %>%
   group_by(`Sentence Time`) %>% 
   count()
 
-
 #Building final dataset
 #Accumulating sentence time
 inc1 = inc %>% 
@@ -33,7 +32,9 @@ inc1 = inc %>%
   mutate(`Sentence Time` = round(`Sentence Months` + `Sentence Years`, 2)) %>%
   mutate(`Sentence Time` = ifelse(`Offense Type` == "Sex Crimes" & is.na(`Sentence Time`) == TRUE, "SDP", `Sentence Time`)) %>% 
   mutate(`Sentence Time` = ifelse(is.na(`Sentence Time`) == TRUE, "LIFE", `Sentence Time`)) %>% 
-  filter(`Sentence Time` != "SDP")
+  filter(`Sentence Time` != "SDP") %>% 
+  mutate(`Life` = ifelse(`Sentence Time` == "LIFE", 1, 0)) %>% 
+  mutate(`Setence Time (num)` = round(as.numeric(`Sentence Time`), 2))
   
 
 write.csv(inc1, file = "C:\\Users\\andre\\OneDrive - University of Illinois - Urbana\\Current Classes\\STAT 431\\incar_data.csv")
