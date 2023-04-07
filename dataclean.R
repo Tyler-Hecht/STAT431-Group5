@@ -32,7 +32,8 @@ inc1 = inc %>%
   mutate(`Sentence Months` = round(inc$`Sentence Months` / 12, 2)) %>% 
   mutate(`Sentence Time` = round(`Sentence Months` + `Sentence Years`, 2)) %>%
   mutate(`Sentence Time` = ifelse(`Offense Type` == "Sex Crimes" & is.na(`Sentence Time`) == TRUE, "SDP", `Sentence Time`)) %>% 
-  mutate(`Sentence Time` = ifelse(is.na(`Sentence Time`) == TRUE, "LIFE", `Sentence Time`))
+  mutate(`Sentence Time` = ifelse(is.na(`Sentence Time`) == TRUE, "LIFE", `Sentence Time`)) %>% 
+  filter(`Sentence Time` != "SDP")
   
 
 write.csv(inc1, file = "C:\\Users\\andre\\OneDrive - University of Illinois - Urbana\\Current Classes\\STAT 431\\incar_data.csv")
