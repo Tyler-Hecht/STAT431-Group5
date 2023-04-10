@@ -21,9 +21,122 @@ cnts = inc %>%
   group_by(`Sentence Years`) %>% 
   count()
 
-cnts2 = inc1 %>% 
-  group_by(`Sentence Time`) %>% 
-  count()
+region1 <- c(
+  'Cook'
+)
+
+region2 <- c(
+  'JoDaviess', 
+  'Stephenson', 
+  'Winnebago', 
+  'Boone',
+  'McHenry',
+  'Lake',
+  'Carroll',
+  'Ogle',
+  'DeKalb',
+  'Kane',
+  'DuPage',
+  'Whiteside',
+  'Lee',
+  'Kendall',
+  'Grundy',
+  'Will',
+  'Kankakee'
+)
+
+region3 <- c(
+  'Rock Island',
+  'Mercer',
+  'Henry',
+  'Bureau',
+  'LaSalle',
+  'Henderson',
+  'Warren',
+  'Knox',
+  'Stark',
+  'Putnam',
+  'Marshall',
+  'Livingston',
+  'Ford',
+  'Iroquois',
+  'Vermillion',
+  'Champaign',
+  'McLean',
+  'Woodford',
+  'Tazewell',
+  'Mason',
+  'Peoria',
+  'Fulton',
+  'McDonough'
+)
+
+region4 <- c(
+  'Hancock',
+  'Adams',
+  'Schuyler',
+  'Brown',
+  'Cass',
+  'Menard',
+  'Logan',
+  'Dewitt',
+  'Piatt',
+  'Douglas',
+  'Edgar',
+  'Clark',
+  'Coles',
+  'Cumberland',
+  'Effingham',
+  'Shelby',
+  'Moultrie',
+  'Macon',
+  'Christian',
+  'Montgomery',
+  'Sangamon',
+  'Morgan',
+  'Macoupin',
+  'Green',
+  'Jersey',
+  'Calhoun',
+  'Scott',
+  'Pike'
+)
+
+region5 <- c(
+  'Madison',
+  'Bond',
+  'Fayette',
+  'Clay',
+  'Jasper',
+  'Crawford',
+  'Lawerence',
+  'Richland',
+  'Edwards',
+  'Wabash',
+  'Wayne',
+  'Marion',
+  'Clinton',
+  'St. Clair',
+  'Monroe',
+  'Randolph',
+  'Washington',
+  'Jefferson',
+  'Perry',
+  'Jackson',
+  'Franklin',
+  'Hamilton',
+  'White',
+  'Williamson',
+  'Saline',
+  'Union',
+  'Johnson',
+  'Pope',
+  'Hardin',
+  'Alexander',
+  'Pulaski',
+  'Massac',
+  'Gallatin'
+)
 
 #Building final dataset
 #Accumulating sentence time
@@ -34,7 +147,16 @@ inc1 = inc %>%
   mutate(`Sentence Time` = ifelse(is.na(`Sentence Time`) == TRUE, "LIFE", `Sentence Time`)) %>% 
   filter(`Sentence Time` != "SDP") %>% 
   mutate(`Life` = ifelse(`Sentence Time` == "LIFE", 1, 0)) %>% 
-  mutate(`Setence Time (num)` = round(as.numeric(`Sentence Time`), 2))
+  mutate(`Setence Time (num)` = round(as.numeric(`Sentence Time`), 2)) %>% 
+  mutate(`IDHS Region` = ifelse(`Sentencing County` %in% region1, 1, 
+                                ifelse(`Sentencing County` %in% region2, 2,
+                                       ifelse(`Sentencing County` %in% region3, 3, 
+                                              ifelse(`Sentencing County` %in% region4, 4, 
+                                                     5)))))
+
+cnts2 = inc1 %>% 
+  group_by(`Sentence Time`) %>% 
+  count()
   
 
 write.csv(inc1, file = "C:\\Users\\andre\\OneDrive - University of Illinois - Urbana\\Current Classes\\STAT 431\\incar_data.csv")
