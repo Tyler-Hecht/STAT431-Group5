@@ -21,7 +21,7 @@ bin = function(data, binsize = 10, maxbin = 70) {
   }
   return(binned)
 }
-df$bins= as.factor(bin(df$Sentence.Time))
+df$bins= as.factor(bin(df$Sentence.Time, binsize = 10))
 df = df[!is.na(df$Setence.Time..num.),]
 
 # create model
@@ -34,8 +34,33 @@ model = ulam(
     cutpoints ~ dnorm(0, 1)
   ), data = dat, chains = 4, cores = 4
 )
+save(model, file = "model_rethinking.file")
+load("model_rethinking.file")
 
 # check results and diagnostics
-precis(model, depth = 2)
-traceplot(model)
+a = precis(model, depth = 2)
+traceplot_ulam(model)
 trankplot(model)
+a$mean
+barplot_race = function(race) {
+  b = rep(0, 7)
+  for (i in 8:14) {
+    b[i-7] = a$mean[i] - a$mean[race]
+  }
+  library(gtools)
+  b = inv.logit(b)
+  p = rep(0, 8)
+  for (i in 1:8) {
+    if (i == 1) {
+      p[1] = b[1]
+    } else if (i == 8) {
+      p[8] = 1 - b[7]
+    } else {
+      p[i] = b[i] - b[i-1]
+    }
+  }
+  print(p)
+  x = 1:8
+  return(barplot(p ~ x, ylim = c(0, ceiling(max(p)*10)/10)))
+}
+barplot_race(4)

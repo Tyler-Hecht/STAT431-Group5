@@ -6,8 +6,8 @@ df = df[!is.na(df$Setence.Time..num.),]
 
 model.text = "model {
   for (i in 1:N) {
-    time[i] ~ dpois(pre_lambda[i])
-    log(pre_lambda[i]) <- b0[race[i]]
+    time[i] ~ dpois(lambda[i])
+    log(lambda[i]) <- b0[race[i]]
   }
   for (race in 1:R) {
     b0[race] ~ dnorm(0, 10)
@@ -21,3 +21,4 @@ traceplot(x)
 gelman.plot(x)
 summary(window(x, 1500, 6000))
 save(x, file = "tmp.file")
+load("tmp.file")
