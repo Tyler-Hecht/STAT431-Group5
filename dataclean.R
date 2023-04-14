@@ -1,5 +1,6 @@
 require(readxl)
 require(tidyverse)
+require(lubridate) 
 
 inc <- read_xlsx("C:\\Users\\andre\\OneDrive - University of Illinois - Urbana\\Current Classes\\STAT 431\\incareration.xlsx")
 #Change appropriate columns to data format
@@ -21,10 +22,9 @@ cnts = inc %>%
   group_by(`Sentence Years`) %>% 
   count()
 
+#Region Grouping
 region1 <- c(
-  'Cook'
-)
-
+  'Cook')
 region2 <- c(
   'JoDaviess', 
   'Stephenson', 
@@ -42,9 +42,7 @@ region2 <- c(
   'Kendall',
   'Grundy',
   'Will',
-  'Kankakee'
-)
-
+  'Kankakee')
 region3 <- c(
   'Rock Island',
   'Mercer',
@@ -68,9 +66,7 @@ region3 <- c(
   'Mason',
   'Peoria',
   'Fulton',
-  'McDonough'
-)
-
+  'McDonough')
 region4 <- c(
   'Hancock',
   'Adams',
@@ -99,9 +95,7 @@ region4 <- c(
   'Jersey',
   'Calhoun',
   'Scott',
-  'Pike'
-)
-
+  'Pike')
 region5 <- c(
   'Madison',
   'Bond',
@@ -135,8 +129,7 @@ region5 <- c(
   'Alexander',
   'Pulaski',
   'Massac',
-  'Gallatin'
-)
+  'Gallatin')
 
 #Building final dataset
 #Accumulating sentence time
@@ -147,16 +140,55 @@ inc1 = inc %>%
   mutate(`Sentence Time` = ifelse(is.na(`Sentence Time`) == TRUE, "LIFE", `Sentence Time`)) %>% 
   filter(`Sentence Time` != "SDP") %>% 
   mutate(`Life` = ifelse(`Sentence Time` == "LIFE", 1, 0)) %>% 
-  mutate(`Setence Time (num)` = round(as.numeric(`Sentence Time`), 2)) %>% 
+  mutate(`Setence Time (num)` = round(as.numeric(`Sentence Time`), 2)) %>%
+  #Region variable (Region # matches # in term)
   mutate(`IDHS Region` = ifelse(`Sentencing County` %in% region1, 1, 
                                 ifelse(`Sentencing County` %in% region2, 2,
                                        ifelse(`Sentencing County` %in% region3, 3, 
                                               ifelse(`Sentencing County` %in% region4, 4, 
-                                                     5)))))
+                                                     5))))) %>% 
+  #Sex variable (Male = 1, Female = 2)
+  mutate(`Sex` = ifelse(`Sex` == "Male", 1, 2)) %>% 
+  #Race variable (Black = 1, White = 2, Hispanic = 3, Asian = 4, American Indian = 5, Biracial = 6, Unknown = 7)
+  mutate(`Race` = ifelse(`Race` == "Black", 1,
+                         ifelse(`Race` == "White", 2, 
+                                ifelse(`Race` == "Hispanic", 3, 
+                                       ifelse(`Race` == "Asian", 4, 
+                                              ifelse(`Race` == "American Indian", 5, 
+                                                     ifelse(`Race` == "Biracial", 6, 7))))))) %>% 
+  #Age variable (difference between date of birth and sentencing date)
+  mutate(`Age` = round(time_length(difftime(`Sentence Date`, `Date of Birth`), "years"), 2)) %>% 
+  filter(`Age` > 0) %>% 
+  #Offense Type variable (Person Crimes = 1, Sex Crimes = 2, Drug Crimes = 3, Property Crimes = 4, Other Crimes = 5)
+  mutate(`Offense Type` = ifelse(`Offense Type` == "Person Crimes", 1,
+                                 ifelse(`Offense Type` == "Sex Crimes", 2, 
+                                        ifelse(`Offense Type` == "Drug Crimes", 3, 
+                                               ifelse(`Offense Type` == "Property Crimes", 4, 5))))) %>% 
+  #Veteran Status variable (Veteran = 1, Not Veteran = 2, Unknown = 3)
+  mutate(`Veteran Status` = ifelse(`Veteran Status` == "Yes", 1,
+                                   ifelse(`Veteran Status` == "No", 2, 3))) %>% 
+  #Crime Class variable (Class X and Murder = 5, Class 1 = 4, Class 2 = 3, Class 3 = 2, Class 4 = 1, Unclassified = NA)
+  mutate(`Crime Class` = ifelse(`Crime Class` == "Murder", 5,
+                                ifelse(`Crime Class` == "Class X", 5, 
+                                       ifelse(`Crime Class` == "Class 1", 4, 
+                                              ifelse(`Crime Class` == "Class 2", 3, 
+                                                     ifelse(`Crime Class` == "Class 3", 2, 
+                                                            ifelse(`Crime Class` == "Class 4", 1, NA)))))))
+  
 
 cnts2 = inc1 %>% 
   group_by(`Sentence Time`) %>% 
   count()
+
+table(inc1$`Race`)
+
+unc <- inc1 %>% 
+  filter(Life == 1)
+
+table(inc1$Life)
+
+
+table(unc$`Crime Class`)
   
 
 write.csv(inc1, file = "C:\\Users\\andre\\OneDrive - University of Illinois - Urbana\\Current Classes\\STAT 431\\incar_data.csv")
