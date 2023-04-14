@@ -155,7 +155,7 @@ inc1 = inc %>%
                                 ifelse(`Race` == "Hispanic", 3, 
                                        ifelse(`Race` == "Asian", 4, 
                                               ifelse(`Race` == "American Indian", 5, 
-                                                     ifelse(`Race` == "Biracial", 6, 7))))))) %>% 
+                                                     ifelse(`Race` == "Bi-Racial", 6, 7))))))) %>% 
   #Age variable (difference between date of birth and sentencing date)
   mutate(`Age` = round(time_length(difftime(`Sentence Date`, `Date of Birth`), "years"), 2)) %>% 
   filter(`Age` > 0) %>% 
@@ -182,10 +182,10 @@ cnts2 = inc1 %>%
 
 table(inc1$`Race`)
 
-unc <- inc1 %>% 
-  filter(Life == 1)
+unc <- inc %>% 
+  filter(Race == "Bi-Racial")
 
-table(inc1$Life)
+table(inc$Race)
 
 
 table(unc$`Crime Class`)
