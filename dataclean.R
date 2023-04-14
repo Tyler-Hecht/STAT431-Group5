@@ -140,7 +140,7 @@ inc1 = inc %>%
   mutate(`Sentence Time` = ifelse(is.na(`Sentence Time`) == TRUE, "LIFE", `Sentence Time`)) %>% 
   filter(`Sentence Time` != "SDP") %>% 
   mutate(`Life` = ifelse(`Sentence Time` == "LIFE", 1, 0)) %>% 
-  mutate(`Setence Time (num)` = round(as.numeric(`Sentence Time`), 2)) %>%
+  mutate(`Sentence Time (num)` = round(as.numeric(`Sentence Time`), 2)) %>%
   #Region variable (Region # matches # in term)
   mutate(`IDHS Region` = ifelse(`Sentencing County` %in% region1, 1, 
                                 ifelse(`Sentencing County` %in% region2, 2,
@@ -206,3 +206,4 @@ write.csv(inc1, file = "C:\\Users\\andre\\OneDrive - University of Illinois - Ur
 #Custody Date
 #Sentence Date
 #age distance
+
