@@ -25,7 +25,7 @@ df$bins= as.factor(bin(df$Sentence.Time, binsize = 10))
 df = df[!is.na(df$Setence.Time..num.),]
 
 # create model
-dat = list(bin = df$bins, race = df$Race, time = round(df$Setence.Time..num.))
+dat = list(bin = df$bins, race = df$Race, time = round(df$Sentence.Time..num.))
 model = ulam(
   alist(
     bin ~ dordlogit(phi, cutpoints),
