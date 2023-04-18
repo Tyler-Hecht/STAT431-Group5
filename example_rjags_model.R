@@ -6,8 +6,8 @@ df = df[!is.na(df$Crime.Class),]
 
 model.text = "model {
   for (i in 1:N) {
-    time[i] ~ dpois(lambda[i])
-    log(lambda[i]) <- b1[race[i]] + b2[sex[i]] + b3[veteran[i]] + b4[offense[i]] + b5[class[i]] + b6[region[i]] + b7*age[i]
+    time[i] ~ dnorm(mu[i], tausq)
+    mu[i] <- b1[race[i]] + b2[sex[i]] + b3[veteran[i]] + b4[offense[i]] + b5[class[i]] + b6[region[i]] + b7*age[i]
   }
   for (race in 1:R) {
     b1[race] ~ dnorm(0, 1)
@@ -28,6 +28,7 @@ model.text = "model {
     b6[region] ~ dnorm(0, 1)
   }
   b7 ~ dnorm(0, 1)
+  tausq ~ dexp(1)
 }"
 cat(model.text, file = {example.rjags.model = tempfile()})
 d = list(time = round(df$Sentence.Time..num), N = nrow(df), race = df$Race, R = 7, veteran = df$Veteran.Status, V = 3, sex = df$Sex, S = 2, offense = df$Offense.Type, O = 5, class = df$Crime.Class, C = 5, region = df$IDHS.Region, RE = 5, age = df$Age)

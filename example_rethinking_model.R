@@ -2,7 +2,6 @@
 library(rethinking)
 setwd("C:/Users/tyler/Documents/Courses/23S/STAT 431/Project/STAT431-Group5")
 df = read.csv("incar_data.csv")
-df$Race = as.numeric(as.factor(df$Race))
 bin = function(data, binsize = 10, maxbin = 70) {
   n_bins = maxbin / binsize + 1
   binned = rep(0, length(data))
@@ -12,7 +11,7 @@ bin = function(data, binsize = 10, maxbin = 70) {
       binned[i] = n_bins
     } else {
       value = as.numeric(value)
-      if (value > maxbin) {
+      if (value >= maxbin) {
         binned[i] = n_bins
       } else {
         binned[i] = ceiling(value / binsize)
@@ -22,7 +21,7 @@ bin = function(data, binsize = 10, maxbin = 70) {
   return(binned)
 }
 df$bins= as.factor(bin(df$Sentence.Time, binsize = 10))
-df = df[!is.na(df$Setence.Time..num.),]
+table(df$bins)
 
 # create model
 dat = list(bin = df$bins, race = df$Race, time = round(df$Sentence.Time..num.))
