@@ -1,5 +1,6 @@
 # setup
 library(rethinking)
+library(gtools)
 setwd("C:/Users/tyler/Documents/Courses/23S/STAT 431/Project/STAT431-Group5")
 df = read.csv("incar_data.csv")
 df = df[!is.na(df$Crime.Class),]
@@ -51,6 +52,7 @@ bin_equal = function(data) {
   return(binned)
 }
 df$bins = bin_equal(df$Sentence.Time..num.)
+barplot(table(df$bins)/length(df$bins), ylim = c(0, 1))
 
 # create model
 dat = list(bin = df$bins, race = df$Race, sex = df$Sex, veteran = df$Veteran.Status, class = df$Crime.Class, offense = df$Offense.Type, region = df$IDHS.Region, age = df$Age)
@@ -73,5 +75,45 @@ load("rethinking_ordinal_additive_model - all.file")
 
 # check results and diagnostics
 precis(model, depth = 2)
+results = precis(model, depth = 2)[,1]
+cutpoint_means = results[1:5]
+b1_means = results[6:12]
+b2_means = results[13:14]
+b3_means = results[15:17]
+b4_means = results[18:22]
+b5_means = results[23:27]
+b6_means = results[28:32]
+b7_mean = results[33]
+coefs = list(cutpoint = cutpoint_means, b1 = b1_means, b2 = b2_means,
+          b3 = b3_means, b4 = b4_means, b5 = b5_means, b6 = b6_means,
+          b7 = b7_mean)
+
+ordinal_estimate = function(race, sex, veteran, class, offense, region, age) {
+  pre_link = rep(0, 5)
+  for (i in 1:5) {
+    pre_link[i] = coefs$cutpoint[i] - (coefs$b1[race] + coefs$b2[sex] + coefs$b3[veteran]
+                                       + coefs$b4[class] + coefs$b5[offense] + coefs$b6[region]
+                                       + coefs$b7*age)
+  }
+  post_link = inv.logit(pre_link)
+  props = rep(0, 6)
+  props[1] = post_link[1]
+  props[2] = post_link[2] - post_link[1]
+  props[3] = post_link[3] - post_link[2]
+  props[4] = post_link[4] - post_link[3]
+  props[5] = post_link[5] - post_link[4]
+  props[6] = 1 - post_link[5]
+  return(props)
+}
+props = ordinal_estimate(
+  race = 1,
+  sex = 1,
+  veteran = 1,
+  class = 1,
+  offense = 1,
+  region = 1,
+  age = 20)
+barplot(props ~ c(1:6), ylim = c(0, 1), xlab = "Bin", ylab = "Probability")
+
 traceplot_ulam(model)
 trankplot(model)
