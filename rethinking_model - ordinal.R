@@ -53,6 +53,8 @@ bin_equal = function(data) {
 }
 df$bins = bin_equal(df$Sentence.Time..num.)
 barplot(table(df$bins)/length(df$bins), ylim = c(0, 1))
+bin_names = c("< 3", "(3, 6]", "(6, 10]", "(10, 19]", "(19, 35]", "> 35 or Life")
+guide = data.frame(bin = 1:6, time = bin_names)
 
 # create model
 dat = list(bin = df$bins, race = df$Race, sex = df$Sex, veteran = df$Veteran.Status, class = df$Crime.Class, offense = df$Offense.Type, region = df$IDHS.Region, age = df$Age)
@@ -68,13 +70,12 @@ model = ulam(
     b5[offense] ~ dnorm(0, 1),
     b6[region] ~ dnorm(0, 1),
     b7 ~ dnorm(0, 1)
-  ), data = dat, chains = 4, cores = 4
+  ), data = dat, chains = 4, cores = 4, log_lik = T
 )
 save(model, file = "rethinking_ordinal_additive_model - all.file")
 load("rethinking_ordinal_additive_model - all.file")
 
-# check results and diagnostics
-precis(model, depth = 2)
+# plot
 results = precis(model, depth = 2)[,1]
 cutpoint_means = results[1:5]
 b1_means = results[6:12]
@@ -89,11 +90,10 @@ coefs = list(cutpoint = cutpoint_means, b1 = b1_means, b2 = b2_means,
           b7 = b7_mean)
 
 ordinal_estimate = function(race, sex, veteran, class, offense, region, age) {
+  phi = coefs$b1[race] + coefs$b2[sex] + coefs$b3[veteran] + coefs$b4[class] + coefs$b5[offense] + coefs$b6[region] + coefs$b7*age
   pre_link = rep(0, 5)
   for (i in 1:5) {
-    pre_link[i] = coefs$cutpoint[i] - (coefs$b1[race] + coefs$b2[sex] + coefs$b3[veteran]
-                                       + coefs$b4[class] + coefs$b5[offense] + coefs$b6[region]
-                                       + coefs$b7*age)
+    pre_link[i] = coefs$cutpoint[i] - phi
   }
   post_link = inv.logit(pre_link)
   props = rep(0, 6)
@@ -113,7 +113,11 @@ props = ordinal_estimate(
   offense = 1,
   region = 1,
   age = 20)
-barplot(props ~ c(1:6), ylim = c(0, 1), xlab = "Bin", ylab = "Probability")
+barplot(props, names = c(1:6), ylim = c(0, 1), xlab = "Bin", ylab = "Probability")
+guide
 
+# check results and diagnostics
+precis(model, depth = 2)
 traceplot_ulam(model)
 trankplot(model)
+plot(precis(model, depth = 2))

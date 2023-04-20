@@ -7,35 +7,25 @@ df = df[!is.na(df$Crime.Class),]
 model.text = "model {
   for (i in 1:N) {
     time[i] ~ dnorm(mu[i], tausq)
-    mu[i] <- b1[race[i]] + b2[sex[i]] + b3[veteran[i]] + b4[offense[i]] + b5[class[i]] + b6[region[i]] + b7*age[i]
+    mu[i] <- b1[sex[i], region[i]]
   }
-  for (race in 1:R) {
-    b1[race] ~ dnorm(0, 1)
+  tausq ~ dgamma(0.001, 0.001)
+  for (region in 1:RE) {
+    for (sex in 1:S) {
+      b1[sex, region] ~ dnorm(mu_bar[sex], tausq_bar[sex])
+    }
   }
   for (sex in 1:S) {
-    b2[sex] ~ dnorm(0, 1)
+    mu_bar[sex] ~ dnorm(0, 0.0001)
+    tausq_bar[sex] ~ dgamma(0.001, 0.001)
   }
-  for (veteran in 1:V) {
-    b3[veteran] ~ dnorm(0, 1)
-  }
-  for (offense in 1:O) {
-    b4[offense] ~ dnorm(0, 1)
-  }
-  for (class in 1:C) {
-    b5[class] ~ dnorm(0, 1)
-  }
-  for (region in 1:RE) {
-    b6[region] ~ dnorm(0, 1)
-  }
-  b7 ~ dnorm(0, 1)
-  tausq ~ dexp(1)
 }"
 cat(model.text, file = {example.rjags.model = tempfile()})
-d = list(time = round(df$Sentence.Time..num), N = nrow(df), race = df$Race, R = 7, veteran = df$Veteran.Status, V = 3, sex = df$Sex, S = 2, offense = df$Offense.Type, O = 5, class = df$Crime.Class, C = 5, region = df$IDHS.Region, RE = 5, age = df$Age)
+d = list(time = df$Sentence.Time..num, N = nrow(df), race = df$Race, R = 7, veteran = df$Veteran.Status, V = 3, sex = df$Sex, S = 2, offense = df$Offense.Type, O = 5, class = df$Crime.Class, C = 5, region = df$IDHS.Region, RE = 5, age = df$Age)
 model = jags.model(example.rjags.model, d, n.chains=3)
-x = coda.samples(model, c("b1", "b2", "b3", "b4", "b5", "b6", "b7"), n.iter=5000)
+x = coda.samples(model, c("b1", "mu_bar", "tausq_bar", "tausq"), n.iter=5000)
 traceplot(x) 
 gelman.diag(x)
-summary(window(x, 1500, 6000))
+summary(window(x, 500, 5000))
 save(x, file = "rjags_additive_poisson_model.file")
 load("rjags_additive_poisson_model.file")
