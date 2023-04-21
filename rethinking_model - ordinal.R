@@ -53,7 +53,7 @@ bin_equal = function(data) {
 }
 df$bins = bin_equal(df$Sentence.Time..num.)
 barplot(table(df$bins)/length(df$bins), ylim = c(0, 1))
-bin_names = c("< 3", "(3, 6]", "(6, 10]", "(10, 19]", "(19, 35]", "> 35 or Life")
+bin_names = c("<= 3", "(3, 6]", "(6, 10]", "(10, 19]", "(19, 35]", "> 35 or Life")
 guide = data.frame(bin = 1:6, time = bin_names)
 
 # create model
@@ -73,7 +73,7 @@ model = ulam(
   ), data = dat, chains = 4, cores = 4, log_lik = T
 )
 save(model, file = "rethinking_ordinal_additive_model - all.file")
-load("rethinking_ordinal_additive_model - all.file")
+load("rethinking_ordinal_additive_model - all (archived).file")
 
 # plot
 results = precis(model, depth = 2)[,1]
@@ -121,3 +121,4 @@ precis(model, depth = 2)
 traceplot_ulam(model)
 trankplot(model)
 plot(precis(model, depth = 2))
+WAIC(model)

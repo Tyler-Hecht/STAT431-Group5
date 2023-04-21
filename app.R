@@ -4,7 +4,9 @@ library(rethinking)
 library(shiny)
 library(tidyverse)
 library(ggplot2)
+library(gtools)
 
+setwd("C:/Users/tyler/Documents/Courses/23S/STAT 431/Project/STAT431-Group5/ordinal_models")
 load("rethinking_ordinal_additive_model - all.file")
 
 
