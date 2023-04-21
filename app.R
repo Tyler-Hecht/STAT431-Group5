@@ -106,9 +106,10 @@ ui = navbarPage(
         
         
       ),
-      mainPanel(plotOutput("plot1"))
-    )
-  ),
+      mainPanel(plotOutput("barplot_rethinking"), dataTableOutput("rethinking_probs"))
+    ),
+
+  )
 )
 
 # Define server logic required to draw a histogram
@@ -133,9 +134,18 @@ server = function(input, output) {
       region = region,
       age = age)
     
-    output$plot1 = renderPlot({
+    output$barplot_rethinking = renderPlot({
       barplot(props, names = c(1:6), ylim = c(0, 1), xlab = "Bin", ylab = "Probability")
     }) 
+    
+    Probability = props
+    Bin = 1:6
+    df = data.frame(Bin, Probability)
+    
+    output$rethinking_probs = renderDataTable({
+      df
+    })
+    
   })
 }
 
