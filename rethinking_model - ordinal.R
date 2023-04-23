@@ -55,6 +55,7 @@ df$bins = bin_equal(df$Sentence.Time..num.)
 barplot(table(df$bins)/length(df$bins), ylim = c(0, 1))
 bin_names = c("<= 3", "(3, 6]", "(6, 10]", "(10, 19]", "(19, 35]", "> 35 or Life")
 guide = data.frame(bin = 1:6, time = bin_names)
+guide
 
 # create model
 dat = list(bin = df$bins, race = df$Race, sex = df$Sex, veteran = df$Veteran.Status, class = df$Crime.Class, offense = df$Offense.Type, region = df$IDHS.Region, age = df$Age)
@@ -103,18 +104,18 @@ ordinal_estimate = function(race, sex, veteran, class, offense, region, age) {
   props[4] = post_link[4] - post_link[3]
   props[5] = post_link[5] - post_link[4]
   props[6] = 1 - post_link[5]
+  print(list("phi" = pre_link, "inv.logit(phi)" = post_link, "proportions" = props))
   return(props)
 }
 props = ordinal_estimate(
   race = 1,
-  sex = 1,
+  sex = 2,
   veteran = 1,
-  class = 1,
+  class = 4,
   offense = 1,
   region = 1,
   age = 20)
 barplot(props, names = c(1:6), ylim = c(0, 1), xlab = "Bin", ylab = "Probability")
-guide
 
 # check results and diagnostics
 precis(model, depth = 2)

@@ -38,45 +38,45 @@ model = ulam(
   alist(
     bin ~ dordlogit(phi, cutpoints),
     cutpoints ~ dnorm(0, 1),
-    phi <- b2[sex] + b3[veteran] + b4[class] + b5[offense] + b6[region] + b7*age,
+    phi <- b1[race] + b2[sex] + b3[veteran] + b5[offense] + b6[region] + b7*age,
+    b1[race] ~ dnorm(0, 1),
     b2[sex] ~ dnorm(0, 1),
     b3[veteran] ~ dnorm(0, 1),
-    b4[class] ~ dnorm(0, 1),
     b5[offense] ~ dnorm(0, 1),
     b6[region] ~ dnorm(0, 1),
     b7 ~ dnorm(0, 1)
   ), data = dat, chains = 4, cores = 4, log_lik = T
 )
-save(model, file = "rethinking_ordinal_additive_model - no race.file")
+save(model, file = "rethinking_ordinal_additive_model - no class.file")
 
 # MODEL 2
 model = ulam(
   alist(
     bin ~ dordlogit(phi, cutpoints),
     cutpoints ~ dnorm(0, 1),
-    phi <- b1[race] + b3[veteran] + b4[class] + b6[region] + b7*age,
+    phi <- b1[race] + b2[sex] + b3[veteran] + b4[class] + b5[offense] + b7*age,
     b1[race] ~ dnorm(0, 1),
+    b2[sex] ~ dnorm(0, 1),
     b3[veteran] ~ dnorm(0, 1),
     b4[class] ~ dnorm(0, 1),
     b5[offense] ~ dnorm(0, 1),
-    b6[region] ~ dnorm(0, 1),
     b7 ~ dnorm(0, 1)
   ), data = dat, chains = 4, cores = 4, log_lik = T
 )
-save(model, file = "rethinking_ordinal_additive_model - no sex.file")
+save(model, file = "rethinking_ordinal_additive_model - no region.file")
 
 # MODEL 3
 model = ulam(
   alist(
     bin ~ dordlogit(phi, cutpoints),
     cutpoints ~ dnorm(0, 1),
-    phi <- b1[race] + b2[sex] + b4[class] + b6[region] + b7*age,
+    phi <- b1[race] + b2[sex] + b3[veteran] + b4[class] + b5[offense] + b6[region],
     b1[race] ~ dnorm(0, 1),
-    b2[sex] ~ dnorm(0, 1)
+    b2[sex] ~ dnorm(0, 1),
+    b3[veteran] ~ dnorm(0, 1),
     b4[class] ~ dnorm(0, 1),
     b5[offense] ~ dnorm(0, 1),
     b6[region] ~ dnorm(0, 1),
-    b7 ~ dnorm(0, 1)
   ), data = dat, chains = 4, cores = 4, log_lik = T
 )
-save(model, file = "rethinking_ordinal_additive_model - no veteran.file")
+save(model, file = "rethinking_ordinal_additive_model - no age.file")
