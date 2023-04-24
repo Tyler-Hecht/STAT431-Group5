@@ -6,11 +6,9 @@ library(tidyverse)
 library(ggplot2)
 library(gtools)
 
-setwd("C:/Users/tyler/Documents/Courses/23S/STAT 431/Project/STAT431-Group5/ordinal_models")
-load("rethinking_ordinal_additive_model - all.file")
+setwd("C:/Users/tyler/Documents/Courses/23S/STAT 431/Project/STAT431-Group5")
 
-
-results = precis(model, depth = 2)[,1]
+load("results.file")
 print(results)
 cutpoint_means = results[1:5]
 b1_means = results[6:12]
@@ -88,7 +86,7 @@ offense_type_helper = function(offense_type) {
   return(offense_type)
 }
 
-data = read_csv("incar_data.txt")
+data = read_csv("incar_data.csv")
 # Define UI for application that draws a histogram
 ui = navbarPage(
   title = "Predicting Prison Sentences in Illinois",
@@ -152,4 +150,5 @@ server = function(input, output) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+app = shinyApp(ui = ui, server = server)
+runApp(app, port = 431, host = "127.0.0.1")
