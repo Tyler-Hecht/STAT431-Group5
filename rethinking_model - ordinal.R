@@ -104,7 +104,7 @@ ordinal_estimate = function(race, sex, veteran, class, offense, region, age) {
   props[4] = post_link[4] - post_link[3]
   props[5] = post_link[5] - post_link[4]
   props[6] = 1 - post_link[5]
-  print(list("phi" = pre_link, "inv.logit(phi)" = post_link, "proportions" = props))
+  print(list("alpha-phi" = pre_link, "inv.logit(alpha-phi)" = post_link, "proportions" = props))
   return(props)
 }
 props = ordinal_estimate(
