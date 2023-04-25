@@ -1,0 +1,455 @@
+---
+title: "STAT431 - Project"
+date: "2023-04-14"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``` {r factorKey}
+## Removed SDP
+
+### Sex
+## 1 - Male
+## 2 - Female
+
+### Races
+## 1 - Black
+## 2 - White
+## 3 - Hispanic
+## 4 - Asian
+## 5 - American Indian
+## 6 - Biracial
+## 7 - Unknown
+
+### Veteran Status
+## 1 - Veteran
+## 2 - Not veteran
+## 3 - Unknown
+
+### Offense Type - Crime Type
+## 1 - Person Crimes
+## 2 - Sex Crimes
+## 3 - Drug Crimes
+## 4 - Property Crimes
+## 5 - Other Crimes
+
+### Crime Class - Crime Severity
+## 5 - Class X and Murder
+## 4 - Class I
+## 3 - Class II
+## 2 - Class III
+## 1 - Class IV
+
+### Regions
+## 1 - Region 1
+## 2 - Region 2
+## 3 - Region 3
+## 4 - Region 4
+## 5 - Region 5
+```
+
+
+``` {r, message=FALSE, loadingLibraries}
+library(tidyverse)
+library(rjags)
+library(readr)
+```
+
+``` {r, message=FALSE, frequentistRegression}
+incar_data <- read_csv("C:/Users/chand/Desktop/STAT431-Group5/incar_data.csv")
+
+incar_data_two <- incar_data %>%
+  select('Sex', 'Race', 'Veteran Status', 
+         `Holding Offense Category`, 'IDHS Region', 'Sentence Time (num)') 
+
+incar_data_two <- na.omit(incar_data_two)
+
+colnames(incar_data_two) <- c("Sex", "Race", "VeteranStatus", 
+                              "HoldingOffense", "Region", "SentenceTime")
+
+incar_data_two$Sex <- factor(incar_data_two$Sex)
+incar_data_two$Race <- factor(incar_data_two$Race)
+incar_data_two$VeteranStatus <- factor(incar_data_two$VeteranStatus)
+incar_data_two$HoldingOffense <- factor(incar_data_two$HoldingOffense)
+incar_data_two$Region <- factor(incar_data_two$Region)
+
+
+myModel <- lm(SentenceTime ~ Sex + Race + VeteranStatus + 
+                HoldingOffense + Region, data = incar_data_two)
+
+summary(myModel)
+
+
+```
+
+``` {r, eval = FALSE, bayesianModelDummyBasic}
+incar_data_three <- incar_data_two %>%
+  select("OffenseType", "SentenceTime")
+
+inits <- list(list(a = 0, b = c(0, 0, 0, 0, 0), tausq = 1),
+              list(a = 5, b = c(10, 10, 10, 10, 10), tausq = 1),
+              list(a = 25, b = c(-10, 10, -10, 10, -10), tausq = 1))
+
+cat('
+model {
+  for(i in 1:length(SentenceTime)) {
+    SentenceTime[i] ~ dnorm(mu[i], tausq)
+    mu[i] <- a + b[OffenseType[i]]
+  }
+  
+  a ~ dnorm(25, 0.001)
+  tausq ~ dgamma(0.0001,0.0001)
+  
+  for (j in 1:5) {
+    b[j] ~ dnorm(0, 0.01)
+  
+  }
+}
+', file = {projBayes1 = tempfile()})
+
+projectBayesModel1 <- jags.model(projBayes1, incar_data_three, inits, n.chains=3)
+model1sample1 <- coda.samples(projectBayesModel1, c("b[5]"), n.iter=30000)
+
+summary(window(model1sample1, 28000, 30000))
+gelman.plot(model1sample1, autoburnin=FALSE)
+gelman.diag(model1sample1, autoburnin=FALSE)
+
+```
+
+$\pagebreak$
+
+``` {r bayesianModelMorePredictorsWithIntercept}
+
+incar_data_four <- incar_data_two %>%
+  select("Race", "Sex", "OffenseType", "Region", "SentenceTime")
+
+inits <- list(list(a = 0,
+                   b = c(-10, -10, -10, -10, -10), 
+                   d = c(0, 1),
+                   e = c(10, -5, 4, 2, -8, 9, -10),
+                   f = c(-10, -5, 0, 5, 10),
+                   tausq = 1),
+              
+              list(a = 25,
+                   b = c(10, 10, 10, 10, 10), 
+                   d = c(1, 0),
+                   e = c(-4, -8, -10, -6, 9, -6, 9),
+                   f = c(10, 5, 0, -5, 10),
+                   tausq = 1),
+              
+              list(a = 50,
+                   b = c(-10, 10, -10, 10, -10), 
+                   d = c(0, 1),
+                   e = c(0, 0, 0, 0, 0, 0, 0),
+                   f = c(2, 2, 2, 2, 2),
+                   tausq = 1))
+
+cat('
+model {
+  for(i in 1:length(SentenceTime)) {
+    SentenceTime[i] ~ dnorm(mu[i], tausq)
+    mu[i] <- a + b[OffenseType[i]] + d[Sex[i]] + e[Race[i]] + f[Region[i]]
+  }
+  
+  a ~ dnorm(0, 0.0001)
+  tausq ~ dgamma(0.0001,0.0001)
+
+  for (j in 1:5) {
+    b[j] ~ dnorm(0, 0.01)
+  }
+  
+  for (k in 1:2) {
+    d[k] ~ dnorm(0, 0.01)
+  }
+  
+  for (l in 1:7) {
+    e[l] ~ dnorm(0, 0.01)
+  }
+  
+  for (w in 1:5) {
+    f[w] ~ dnorm(0, 0.01)
+  }
+  
+}
+', file = {projBayes2 = tempfile()})
+
+projectBayesModel2 <- jags.model(projBayes2, incar_data_four, inits, n.chains=3)
+model2sample1 <- coda.samples(projectBayesModel2, c("a", "b[1]"), n.iter=70000)
+
+
+gelman.diag(model2sample1, autoburnin=FALSE)
+gelman.plot(model2sample1, autoburnin=FALSE)
+
+```
+$\pagebreak$
+
+``` {r bayesianModelMorePredictorsWithoutIntercept }
+
+incar_data_four <- incar_data_two %>%
+  select("Race", "Sex", "OffenseType", "Region", "SentenceTime")
+
+inits <- list(list(b = c(-10, -10, -10, -10, -10), 
+                   d = c(0, 1),
+                   e = c(10, -5, 4, 2, -8, 9, -10),
+                   f = c(-10, -5, 0, 5, 10),
+                   tausq = 1),
+              
+              list(b = c(10, 10, 10, 10, 10), 
+                   d = c(1, 0),
+                   e = c(-4, -8, -10, -6, 9, -6, 9),
+                   f = c(10, 5, 0, -5, 10),
+                   tausq = 1),
+              
+              list(b = c(-10, 10, -10, 10, -10), 
+                   d = c(0, 1),
+                   e = c(0, 0, 0, 0, 0, 0, 0),
+                   f = c(2, 2, 2, 2, 2),
+                   tausq = 1))
+
+cat('
+model {
+  for(i in 1:length(SentenceTime)) {
+    SentenceTime[i] ~ dnorm(mu[i], tausq)
+    mu[i] <- b[OffenseType[i]] + d[Sex[i]] + e[Race[i]] + f[Region[i]]
+  }
+  
+  tausq ~ dgamma(0.0001,0.0001)
+  
+  for (j in 1:5) {
+    b[j] ~ dnorm(0, 0.0001)
+  }
+  
+  for (k in 1:2) {
+    d[k] ~ dnorm(0, 0.0001)
+  }
+  
+  for (l in 1:7) {
+    e[l] ~ dnorm(0, 0.0001)
+  }
+  
+  for (w in 1:5) {
+    f[w] ~ dnorm(0, 0.0001)
+  }
+  
+}
+', file = {projBayes2 = tempfile()})
+
+projectBayesModel2 <- jags.model(projBayes2, incar_data_four, inits, n.chains=3)
+model2sample1 <- coda.samples(projectBayesModel2, c("b", "d","e", "f"), n.iter=25000)
+summary(window(model2sample1, 8000, 10000))
+
+```
+
+
+``` {r CleaningForbayesianCategoricalOrdinal}
+
+### I'm scared. I pooped my pampers. Redoing Cleaning for Proper Binning, Mate.
+
+### Reading in Data - Cleaning SDP - Changing SentenceTime to numeric
+
+filthyData2 <- read_csv("filthyData2.csv")
+filthyData2 <- filthyData2[filthyData2$SentenceYears != "SDP", ]
+
+sentenceYearVec <- ifelse(filthyData2$SentenceYears == "LIFE", Inf, as.numeric(filthyData2$SentenceYears))
+sentenceMonthVec <- ifelse(is.na(filthyData2$SentenceMonths), 0, as.numeric(filthyData2$SentenceMonths))
+sentenceTimeVec <- sentenceYearVec + sentenceMonthVec / 12.0
+filthyData2["SentenceTime"] <- sentenceTimeVec
+
+###
+
+### Selecting Desired Columns
+
+cleanedFilthyData <- filthyData2 %>%
+  select("Sex", "Race", "Veteran", "CrimeClass", "SentencingCounty", "SentenceTime")
+
+###
+
+### Changing to Regions
+
+regionVec = rep(0, length(cleanedFilthyData$SentencingCounty))
+for (i in 1:length(cleanedFilthyData$SentencingCounty)) {
+  
+  if (cleanedFilthyData$SentencingCounty[i] == "Out of state") {
+    regionVec[i] <- NA
+    next
+  }
+  
+  if (cleanedFilthyData$SentencingCounty[i] == 'Cook') {
+    regionVec[i] <- 1
+  }
+  
+  else if (cleanedFilthyData$SentencingCounty[i] %in% c("JoDaviess", "Stephenson", "Winnebago", "Boone", "McHenry", "Lake", "Carroll", "Ogle", "DeKalb", "Kane", "DuPage", "Whiteside", "Lee", "Kendall", "Grundy", "Will", "Kankakee")) {
+    regionVec[i] <- 2
+  }
+  
+  else if (cleanedFilthyData$SentencingCounty[i] %in% c("Rock Island", "Mercer", "Henry", "Bureau", "LaSalle", "Henderson", "Warren", "Knox", "Stark", "Putnam", "Marshall", "Livingston", "Ford", "Iroquois", "Vermillion", "Champaign", "McLean", "Woodford", "Tazewell", "Mason", "Peoria", "Fulton", "McDonough")) {
+    regionVec[i] <- 3
+  }
+  
+  else if (cleanedFilthyData$SentencingCounty[i] %in% c("Hancock", "Adams", "Schuyler", "Brown", "Cass", "Menard", "Logan", "Dewitt", "Piatt", "Douglas", "Edgar", "Clark", "Coles", "Cumberland", "Effingham", "Shelby", "Moultrie", "Macon", "Christian", "Montgomery", "Sangamon", "Morgan", "Macoupin", "Green", "Jersey", "Calhoun", "Scott", "Pike")) {
+    regionVec[i] <- 4
+  }
+  
+  else {
+    regionVec[i] <- 5
+  }                                                 
+  
+}
+
+cleanedFilthyData["Region"] <- regionVec
+ 
+###
+
+### Changing Sex; Male = 1, Female = 0
+
+cleanedFilthyDataSexVec <- ifelse(cleanedFilthyData$Sex == "Male", 1, 0)
+cleanedFilthyData["SexNum"] <- cleanedFilthyDataSexVec
+
+### Changing Race 
+
+## Races Key
+## 1 - Black
+## 2 - White
+## 3 - Hispanic
+## 4 - Asian
+## 5 - American Indian
+## 6 - Biracial
+## 7 - Unknown
+
+myRaceVec <- rep(0, length(cleanedFilthyData$Race))
+for(i in 1:length(cleanedFilthyData$Race)) {
+  
+  if (cleanedFilthyData$Race[i] == "Black") {
+    myRaceVec[i] <- 1
+  }
+  
+  else if (cleanedFilthyData$Race[i] == "White") {
+    myRaceVec[i] <- 2
+  }
+  
+  else if (cleanedFilthyData$Race[i] == "Hispanic") {
+    myRaceVec[i] <- 3
+  }
+  
+  else if (cleanedFilthyData$Race[i] == "Asian") {
+    myRaceVec[i] <- 4
+  }
+  
+  else if (cleanedFilthyData$Race[i] == "American Indian") {
+    myRaceVec[i] <- 5
+  }
+  
+  else if (cleanedFilthyData$Race[i] == "Biracial") {
+    myRaceVec[i] <- 6
+  }
+  
+  else {
+    myRaceVec[i] <- 7
+  }
+  
+}
+
+cleanedFilthyData["RaceNum"] <- myRaceVec
+
+###
+
+### Changing Crime Class
+
+## Crime Class Key
+## 1 - Murder
+## 2 - Class X
+## 3 - Class I
+## 4 - Class II
+## 5 - Class III
+## 6 - Class IV
+## 7 - Unclassified
+
+myCrimeClassVec <- rep(0, length(cleanedFilthyData$CrimeClass))
+for(i in 1:length(cleanedFilthyData$CrimeClass)) {
+  
+  if (cleanedFilthyData$CrimeClass[i] == "Murder") {
+    myCrimeClassVec[i] <- 1
+  }
+  
+  else if (cleanedFilthyData$CrimeClass[i] == "Class X") {
+    myCrimeClassVec[i] <- 2
+  }
+  
+  else if (cleanedFilthyData$CrimeClass[i] == "Class 1") {
+    myCrimeClassVec[i] <- 3
+  }
+  
+  else if (cleanedFilthyData$CrimeClass[i] == "Class 2") {
+    myCrimeClassVec[i] <- 4
+  }
+  
+  else if (cleanedFilthyData$CrimeClass[i] == "Class 3") {
+    myCrimeClassVec[i] <- 5
+  }
+  
+  else if (cleanedFilthyData$CrimeClass[i] == "Class 4") {
+    myCrimeClassVec[i] <- 6
+  }
+  
+  else {
+    myCrimeClassVec[i] <- 7
+  }
+}
+
+cleanedFilthyData["CrimeNum"] <- myCrimeClassVec
+
+###
+
+### Veteran Status; 1 - Veteran, 2 - Not Veteran, 3 - Unknown
+
+veteranVec <- rep(0, length(cleanedFilthyData$Veteran))
+for (i in 1:length(cleanedFilthyData$Veteran)) {
+  
+  if (cleanedFilthyData$Veteran[i] == "Yes") {
+    veteranVec[i] <- 1
+  }
+  
+  else if (cleanedFilthyData$Veteran[i] == "No") {
+    veteranVec[i] <- 2
+  }
+  
+  else {
+    veteranVec[i] <- 3
+  }
+}
+
+cleanedFilthyData["VetNum"] <- veteranVec
+
+###
+
+### Completed cleaning, Rearranging Columns
+
+cleanedData <- cleanedFilthyData %>%
+  select("VetNum", "RaceNum", "SexNum", "CrimeNum", "Region", "SentenceTime")
+
+###
+
+```
+
+``` {r frequentistNewClean}
+
+withoutLife <- cleanedData[cleanedData$SentenceTime < Inf, ]
+
+withoutLife$VetNum <- factor(withoutLife$VetNum)
+withoutLife$RaceNum <- factor(withoutLife$RaceNum)
+withoutLife$SexNum <- factor(withoutLife$SexNum)
+withoutLife$CrimeNum <- factor(withoutLife$CrimeNum)
+withoutLife$Region <- factor(withoutLife$Region)
+
+myModel <- lm(SentenceTime ~ SexNum + RaceNum + VetNum + 
+                CrimeNum + Region, data = withoutLife)
+
+summary(myModel)
+
+```
+
+``` {r }
+
