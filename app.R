@@ -9,15 +9,11 @@ library(rstan)
 theme_set(theme_minimal())
 
 
-# setwd("C:/Users/tyler/Documents/Courses/23S/STAT 431/Project/STAT431-Group5")
-# load("results.file")
+setwd("C:/Users/tyler/Documents/Courses/23S/STAT 431/Project/STAT431-Group5")
+load("results.file")
 # df = read.csv("incar_data.csv")
 
 
-load("rethinking_ordinal_additive_model - all.file")
-
-
-results = precis(model, depth = 2)[,1]
 cutpoint_means = results[1:5]
 b1_means = results[6:12]
 b2_means = results[13:14]
@@ -135,7 +131,7 @@ normal_sentence = function(race, region, sex, class, vet_status, age) {
   return(sentence)
 }
 
-data = read_csv("incar_data.txt")
+data = read_csv("incar_data.csv")
 # Define UI for application that draws a histogram
 ui = navbarPage(
   title = "Predicting Prison Sentences in Illinois",
@@ -211,18 +207,11 @@ server = function(input, output) {
       rename("Predicted Sentence Time in Years" = "Bin")
     
     output$data = renderDataTable({
-      as.tibble(incar_data)
+      as.tibble(data)
     })
     
     output$barplot_rethinking = renderPlot({
-      df %>% ggplot() +
-        aes(x = fct_inorder(Bin), y = Probability, fill = Probability, colors("red")) +
-        geom_bar(stat = "identity") + 
-        scale_fill_gradient(low = "green", high = "red") +
-        ylab("Probability (%)") +
-        xlab("Predicted Sentence Time in Years")
-
-      # barplot(props, names = c(1:6), ylim = c(0, 1), xlab = "Bin", ylab = "Probability")
+      barplot(Probability/100, names = Bin, ylim = c(0, 1), xlab = "Bin", ylab = "Probability", col = c("#99FF77", "#AADD77", "#BBBB55", "#CC8855", "#FF8855", "#FF6666"))
     }) 
     
     output$rethinking_probs = renderDataTable({
@@ -238,5 +227,5 @@ server = function(input, output) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
-# runApp(app, port = 431, host = "127.0.0.1")
+app = shinyApp(ui = ui, server = server)
+runApp(app, port = 431, host = "127.0.0.1")
